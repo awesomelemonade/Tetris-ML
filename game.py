@@ -1,7 +1,5 @@
-class Color:
-	BLACK = (0, 0, 0)
-	WHITE = (255, 255, 255)
-
+import Color
+import TetrisConstants
 
 class TetrisGame:
 	def __init__(self):
@@ -28,6 +26,8 @@ class TetrisGame:
 			pygame.display.flip()
 			self.clock.tick(self.target_fps)
 			
+
+
 
 import pygame
 pygame.init()
