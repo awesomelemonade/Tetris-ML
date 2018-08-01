@@ -31,6 +31,9 @@ class TetrisGame:
 						board.moveFallingPiece(moveX=1, moveY=0)
 					if event.key == pygame.K_s:
 						board.moveFallingPiece(moveX=0, moveY=1)
+					if event.key == pygame.K_SPACE:
+						board.spike()
+						board.update()
 			# Updates the game
 			if lastUpdate + UPDATE_INTERVAL < time.time():
 				board.update()
@@ -39,10 +42,10 @@ class TetrisGame:
 			self.screen.fill(Color.BLACK)
 			board.render(self.screen, *self.window_size)
 			#pygame.draw.rect(self.screen, Color.BLACK, [x, y, width, height], 0)
-			
+
 			pygame.display.flip()
 			self.clock.tick(self.target_fps)
-			
+
 
 
 import pygame
@@ -50,5 +53,3 @@ pygame.init()
 game = TetrisGame()
 game.start()
 pygame.quit()
-
-

@@ -29,10 +29,11 @@ class TetrisBoard:
 		numLinesRemoved = ListLinesRemoved.shape
 		# Move Everything Down
 		for y in ListLinesRemoved:
-			self.grid[:, :y + 1] = self.grid[:, :y]
+			print(y)
+			self.grid[:, 1 : y + 1] = self.grid[:, :y]
 			self.grid[:, 0] = BLANK
-			#scoring
-			change_Score(numLinesRemoved)
+		#scoring
+		self.changeScore(numLinesRemoved)
 
 	def isOnBoard(self, x, y):
 		return x >= 0 and x < self.width and y >= 0 and y < self.height
@@ -72,6 +73,11 @@ class TetrisBoard:
 			return True
 		else:
 			return False
+	def spike(self):
+		adjustY = 0
+		while(self.isValidPosition(self.fallingPiece, adjustY = adjustY)):
+			adjustY += 1
+		self.moveFallingPiece(moveX = 0, moveY = adjustY - 1)
 	def rotateFallingPiece(self, rotate):
 		targetRotation = (self.fallingPiece.rotation + rotate) % len(TetrisConstants.PIECES[self.fallingPiece.type].template)
 		if self.isValidPosition(self.fallingPiece, rotation=targetRotation):
@@ -106,7 +112,7 @@ class TetrisBoard:
 				if not self.getTemplate(self.fallingPiece, x, y) == BLANK:
 					pygame.draw.rect(screen, TetrisConstants.PIECES[self.fallingPiece.type].color, [(self.fallingPiece.x + x) * gridWidth, (self.fallingPiece.y + y) * gridHeight, gridWidth, gridHeight])
 		# Render Next Piece - TODO
-	def changeScore(lines):
+	def changeScore(self, lines):
 		if(lines == 1):
 			score = 40
 		elif(lines == 2):
