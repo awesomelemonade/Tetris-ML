@@ -12,6 +12,8 @@ class TetrisBoard:
 		self.startY = 0
 		self.fallingPiece = self.getRandomNewPiece()
 		self.nextPiece = self.getRandomNewPiece()
+		self.score = 0
+		self.level = 1
 	def createBlankGrid(self):
 		grid = np.chararray((self.width, self.height))
 		grid[:] = BLANK
@@ -19,13 +21,19 @@ class TetrisBoard:
 	def isCompleteLine(self, grid, y):
 		return np.all(grid[:, y].decode() != BLANK)
 	def removeCompletedLines(self):
-		numLinesRemoved = 0
+		ListLinesRemoved = []
 		for y in range(self.height - 1, -1, -1): # Go from bottom up
 			if self.isCompleteLine(self.grid, y):
-				numLinesRemoved += 1
+				ListLinesRemoved.append(y)
+		ListLinesRemoved = np.array(ListLinesRemoved)
+		numLinesRemoved = ListLinesRemoved.shape
 		# Move Everything Down
-		self.grid[:, numLinesRemoved:] = self.grid[:, :self.height - numLinesRemoved]
-		self.grid[:, :numLinesRemoved] = BLANK
+		for y in ListLinesRemoved:
+			self.grid[:, :y + 1] = self.grid[:, :y]
+			self.grid[:, 0] = BLANK
+			#scoring
+			change_Score(numLinesRemoved)
+
 	def isOnBoard(self, x, y):
 		return x >= 0 and x < self.width and y >= 0 and y < self.height
 	def isValidPosition(self, piece, adjustX=0, adjustY=0):
@@ -55,15 +63,19 @@ class TetrisBoard:
 		return self.random.choice(list(TetrisConstants.PIECES.keys()))
 	def getRandomRotation(self, pieceType):
 		return self.random.randint(0, len(TetrisConstants.PIECES[pieceType].template))
-	def update(self):
+	def update(self): #returns false if lose condition, true if normal condition
 		if not self.isValidPosition(self.fallingPiece, adjustY=1):
 			# falling piece has landed, set it on the board
 			self.setPiece(self.fallingPiece)
-			self.fallingPiece = self.nextPiece
-			self.nextPiece = self.getRandomNewPiece()
 			self.removeCompletedLines()
+			self.fallingPiece = self.nextPiece
+			#check if anything is on top
+			if(not self.isValidPosition(self.fallingPiece)):
+				return False #loss condition
+			self.nextPiece = self.getRandomNewPiece()
 		else:
 			self.fallingPiece.y += 1
+		return True #normal condition
 	def render(self, screen, renderWidth, renderHeight):
 		gridWidth = renderWidth / self.width
 		gridHeight = renderHeight / self.height
@@ -78,3 +90,13 @@ class TetrisBoard:
 				if not self.getTemplate(self.fallingPiece, x, y) == BLANK:
 					pygame.draw.rect(screen, TetrisConstants.PIECES[self.fallingPiece.type].color, [(self.fallingPiece.x + x) * gridWidth, (self.fallingPiece.y + y) * gridHeight, gridWidth, gridHeight])
 		# Render Next Piece - TODO
+	def changeScore(lines):
+		if(lines == 1):
+			score = 40
+		elif(lines == 2):
+			score = 100
+		elif(lines== 3):
+			score = 300
+		else:
+			score = 1200
+		self.score += self.level * score
