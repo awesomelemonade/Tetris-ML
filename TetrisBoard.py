@@ -17,13 +17,14 @@ class TetrisBoard:
 		grid[:] = BLANK
 		return grid
 	def isCompleteLine(self, grid, y):
-		return np.all(grid[:, y] != BLANK)
+		return np.all(grid[:, y].decode() != BLANK)
 	def removeCompletedLines(self):
 		numLinesRemoved = 0
-		for y in range(self.height, 0, -1) - 1:
-			if isCompleteLine(self.grid, y):
+		for y in range(self.height - 1, -1, -1): # Go from bottom up
+			if self.isCompleteLine(self.grid, y):
 				numLinesRemoved += 1
-		self.grid[:, numLinesRemoved:] = self.grid[:, :height - numLinesremoved]
+		# Move Everything Down
+		self.grid[:, numLinesRemoved:] = self.grid[:, :self.height - numLinesRemoved]
 		self.grid[:, :numLinesRemoved] = BLANK
 	def isOnBoard(self, x, y):
 		return x >= 0 and x < self.width and y >= 0 and y < self.height
@@ -60,6 +61,7 @@ class TetrisBoard:
 			self.setPiece(self.fallingPiece)
 			self.fallingPiece = self.nextPiece
 			self.nextPiece = self.getRandomNewPiece()
+			self.removeCompletedLines()
 		else:
 			self.fallingPiece.y += 1
 	def render(self, screen, renderWidth, renderHeight):
