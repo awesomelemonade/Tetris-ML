@@ -21,17 +21,12 @@ class TetrisBoard:
 	def isCompleteLine(self, grid, y):
 		return np.all(grid[:, y].decode() != BLANK)
 	def removeCompletedLines(self):
-		ListLinesRemoved = []
-		for y in range(self.height - 1, -1, -1): # Go from bottom up
+		numLinesRemoved = 0
+		for y in range(0, self.height): # Go from bottom up
 			if self.isCompleteLine(self.grid, y):
-				ListLinesRemoved.append(y)
-		ListLinesRemoved = np.array(ListLinesRemoved)
-		numLinesRemoved = ListLinesRemoved.shape
-		# Move Everything Down
-		for y in ListLinesRemoved:
-			print(y)
-			self.grid[:, 1 : y + 1] = self.grid[:, :y]
-			self.grid[:, 0] = BLANK
+				self.grid[:, 1 : y + 1] = self.grid[:, :y]
+				self.grid[:, 0] = BLANK
+				numLinesRemoved += 1
 		#scoring
 		self.changeScore(numLinesRemoved)
 
