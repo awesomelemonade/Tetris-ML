@@ -6,7 +6,7 @@ class TetrisGame:
 	def __init__(self):
 		self.close_requested = False
 		self.target_fps = 60
-		self.window_size = (10 * 40, 20 * 40)
+		self.window_size = (30 * 40, 20 * 40)
 		self.title = "Tetris"
 	def start(self):
 		# Init
@@ -41,8 +41,8 @@ class TetrisGame:
 				else:
 					lastUpdate += UPDATE_INTERVAL
 			# Draws the game
-			self.screen.fill(Color.BLACK)
-			board.render(self.screen, *self.window_size)
+			self.screen.fill((255,239,213))
+			board.render(self.screen, * self.window_size, shiftx = self.window_size[0]/3)
 			#pygame.draw.rect(self.screen, Color.BLACK, [x, y, width, height], 0)
 
 			pygame.display.flip()

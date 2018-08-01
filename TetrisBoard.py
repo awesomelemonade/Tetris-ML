@@ -1,6 +1,7 @@
 import numpy as np
 from TetrisConstants import *
 import pygame
+from Color import Color
 
 class TetrisBoard:
 	def __init__(self, width, height, renderWidth, renderHeight, seed):
@@ -69,7 +70,7 @@ class TetrisBoard:
 		else:
 			return False
 	def spike(self):
-		adjustY = 0
+		adjustY = 1
 		while(self.isValidPosition(self.fallingPiece, adjustY = adjustY)):
 			adjustY += 1
 		self.moveFallingPiece(moveX = 0, moveY = adjustY - 1)
@@ -93,20 +94,30 @@ class TetrisBoard:
 		else:
 			self.fallingPiece.y += 1
 		return True #normal condition
-	def render(self, screen, renderWidth, renderHeight):
-		gridWidth = renderWidth / self.width
-		gridHeight = renderHeight / self.height
+	def render(self, screen, renderWidth, renderHeight, shiftx = 0, shifty = 0):
+		gridWidth = renderWidth / (3 * self.width)
+		gridHeight = renderHeight / (self.height)
 		# Render Grid
 		for x in range(self.width):
 			for y in range(self.height):
 				if not self.grid[x, y].decode() == BLANK:
-					pygame.draw.rect(screen, TetrisConstants.PIECES[self.grid[x, y].decode()].color, [x * gridWidth, y * gridHeight, gridWidth, gridHeight])
+					pygame.draw.rect(screen, self.border(TetrisConstants.PIECES[self.grid[x, y].decode()].color), [x * gridWidth + shiftx, y * gridHeight + shifty, gridWidth, gridHeight], 3)
+					pygame.draw.rect(screen, TetrisConstants.PIECES[self.grid[x, y].decode()].color , [x * gridWidth + shiftx, y * gridHeight + shifty, gridWidth, gridHeight])
+				else:
+					pygame.draw.rect(screen, Color.BLACK, [x * gridWidth +shiftx, y * gridHeight + shifty, gridWidth, gridHeight])
 		# Render Falling Piece
 		for x in range(TetrisConstants.TEMPLATE_WIDTH):
 			for y in range(TetrisConstants.TEMPLATE_HEIGHT):
 				if not self.getTemplate(self.fallingPiece, x, y) == BLANK:
-					pygame.draw.rect(screen, TetrisConstants.PIECES[self.fallingPiece.type].color, [(self.fallingPiece.x + x) * gridWidth, (self.fallingPiece.y + y) * gridHeight, gridWidth, gridHeight])
-		# Render Next Piece - TODO
+					pygame.draw.rect(screen, self.border(TetrisConstants.PIECES[self.fallingPiece.type].color), [(self.fallingPiece.x + x) * gridWidth + shiftx, (self.fallingPiece.y + y) * gridHeight + shifty, gridWidth, gridHeight], 3)
+					pygame.draw.rect(screen, TetrisConstants.PIECES[self.fallingPiece.type].color, [(self.fallingPiece.x + x) * gridWidth + shiftx, (self.fallingPiece.y + y) * gridHeight + shifty, gridWidth, gridHeight])
+		# Render Next Piece
+		pygame.draw.rect(screen, (0, 130, 255), [100, 100, gridWidth * 5, gridHeight * 5])
+		for x in range(TetrisConstants.TEMPLATE_WIDTH):
+			for y in range(TetrisConstants.TEMPLATE_HEIGHT):
+				if not self.getTemplate(self.nextPiece, x, y) == BLANK:
+					pygame.draw.rect(screen, self.border(TetrisConstants.PIECES[self.nextPiece.type].color), [(self.nextPiece.x + x) * gridWidth + 10, (self.nextPiece.y + y) * gridHeight + 100, gridWidth, gridHeight], 3)
+					pygame.draw.rect(screen, TetrisConstants.PIECES[self.nextPiece.type].color, [(self.nextPiece.x + x) * gridWidth + 10, (self.nextPiece.y + y) * gridHeight + 100, gridWidth, gridHeight])
 	def changeScore(self, lines):
 		if(lines == 1):
 			score = 40
@@ -117,3 +128,8 @@ class TetrisBoard:
 		else:
 			score = 1200
 		self.score += self.level * score
+	#onyl for styling
+	def border(self, color):
+		arr = np.array(color, dtype = np.int)
+		center = ((arr < 128) - .5) * 2
+		return tuple(arr + center * 30)
