@@ -36,8 +36,10 @@ class TetrisGame:
 						board.update()
 			# Updates the game
 			if lastUpdate + UPDATE_INTERVAL < time.time():
-				board.update()
-				lastUpdate += UPDATE_INTERVAL
+				if(not board.update()):
+					self.lose()
+				else:
+					lastUpdate += UPDATE_INTERVAL
 			# Draws the game
 			self.screen.fill(Color.BLACK)
 			board.render(self.screen, *self.window_size)
@@ -45,8 +47,13 @@ class TetrisGame:
 
 			pygame.display.flip()
 			self.clock.tick(self.target_fps)
-
-
+	def lose(self):
+		basicfont = pygame.font.SysFont("Lose Message", 48)
+		text = basicfont.render('lol you suck', True, (255, 0, 0), (255, 255, 255))
+		textrect = text.get_rect()
+		textrect.centerx = self.screen.get_rect().centerx
+		textrect.centery = self.screen.get_rect().centery
+		self.screen.blit(text, textrect)
 
 import pygame
 pygame.init()
