@@ -1,17 +1,19 @@
 import Color
+
+PieceTemplate = namedtuple('PieceTemplate', ['template', 'color'])
+Piece = namedtuple('Piece', ['x', 'y', 'type', 'rotation']) # rotation is an index of template
+
 class TetrisConstants:
-	TEMPLATEWIDTH = 5
-	TEMPLATEHEIGHT = 5
+	TEMPLATE_WIDTH = 5
+	TEMPLATE_HEIGHT = 5
 
-	Piece = namedtuple('Piece', ['template', 'color'])
-
-	PIECES = {'S': (S_SHAPE_TEMPLATE, Color.YELLOW),
-		  'Z': (Z_SHAPE_TEMPLATE, Color.WHITE),
-		  'J': (J_SHAPE_TEMPLATE, Color.GREEN),
-		  'L': (L_SHAPE_TEMPLATE, Color.RED),
-		  'I': (I_SHAPE_TEMPLATE, Color.PURPLE),
-		  'O': (O_SHAPE_TEMPLATE, Color.ORANGE),
-		  'T': (T_SHAPE_TEMPLATE, Color.BLUE)}
+	PIECES = {'S': PieceTemplate(S_SHAPE_TEMPLATE, Color.YELLOW),
+		  'Z': PieceTemplate(Z_SHAPE_TEMPLATE, Color.WHITE),
+		  'J': PieceTemplate(J_SHAPE_TEMPLATE, Color.GREEN),
+		  'L': PieceTemplate(L_SHAPE_TEMPLATE, Color.RED),
+		  'I': PieceTemplate(I_SHAPE_TEMPLATE, Color.PURPLE),
+		  'O': PieceTemplate(O_SHAPE_TEMPLATE, Color.ORANGE),
+		  'T': PieceTemplate(T_SHAPE_TEMPLATE, Color.BLUE)}
 
 	S_SHAPE_TEMPLATE = [['.....',
 		             '.....',
