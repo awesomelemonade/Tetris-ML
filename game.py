@@ -19,6 +19,15 @@ class TetrisGame:
 			for event in pygame.event.get():
 				if event.type == pygame.QUIT:
 					self.close_requested = True
+				if event.type == pygame.KEYDOWN:
+					if event.key == pygame.K_w:
+						board.rotateFallingPiece(1)
+					if event.key == pygame.K_a:
+						board.moveFallingPiece(moveX=-1, moveY=0)
+					if event.key == pygame.K_d:
+						board.moveFallingPiece(moveX=1, moveY=0)
+					if event.key == pygame.K_s:
+						board.moveFallingPiece(moveX=0, moveY=1)
 			# Draws the game
 			self.screen.fill(Color.BLACK)
 			
