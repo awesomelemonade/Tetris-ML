@@ -36,10 +36,10 @@ class TetrisBoard:
 
 	def isOnBoard(self, x, y):
 		return x >= 0 and x < self.width and y >= 0 and y < self.height
-	def isValidPosition(self, piece, adjustX=0, adjustY=0):
+	def isValidPosition(self, piece, adjustX=0, adjustY=0, rotation=None):
 		for x in range(TetrisConstants.TEMPLATE_WIDTH):
 			for y in range(TetrisConstants.TEMPLATE_HEIGHT):
-				if self.getTemplate(piece, x, y) == BLANK:
+				if self.getTemplate(piece, x, y, rotation) == BLANK:
 					continue
 				if not self.isOnBoard(piece.x + x + adjustX, piece.y + y + adjustY):
 					return False
@@ -51,11 +51,13 @@ class TetrisBoard:
 			for y in range(TetrisConstants.TEMPLATE_HEIGHT):
 				if not self.getTemplate(piece, x, y) == BLANK:
 					self.grid[piece.x + x, piece.y + y] = self.getTemplate(piece, x, y)
-	def getTemplate(self, piece, x=None, y=None):
+	def getTemplate(self, piece, x=None, y=None, rotation=None):
 		if x is None or y is None:
 			return TetrisConstants.PIECES[piece.type].template[piece.rotation]
-		else:
+		elif rotation is None:
 			return TetrisConstants.PIECES[piece.type].template[piece.rotation][x][y]
+		else:
+			return TetrisConstants.PIECES[piece.type].template[rotation][x][y]
 	def getRandomNewPiece(self):
 		pieceType = self.getRandomPieceType()
 		return Piece(self.startX, self.startY, pieceType, self.getRandomRotation(pieceType))
@@ -63,7 +65,21 @@ class TetrisBoard:
 		return self.random.choice(list(TetrisConstants.PIECES.keys()))
 	def getRandomRotation(self, pieceType):
 		return self.random.randint(0, len(TetrisConstants.PIECES[pieceType].template))
-	def update(self): #returns false if lose condition, true if normal condition
+	def moveFallingPiece(self, moveX, moveY):
+		if self.isValidPosition(self.fallingPiece, adjustX=moveX, adjustY=moveY):
+			self.fallingPiece.x += moveX
+			self.fallingPiece.y += moveY
+			return True
+		else:
+			return False
+	def rotateFallingPiece(self, rotate):
+		targetRotation = (self.fallingPiece.rotation + rotate) % len(TetrisConstants.PIECES[self.fallingPiece.type].template)
+		if self.isValidPosition(self.fallingPiece, rotation=targetRotation):
+			self.fallingPiece.rotation = targetRotation
+			return True
+		else:
+			return False
+	def update(self): # Returns false if lose condition, true if normal condition
 		if not self.isValidPosition(self.fallingPiece, adjustY=1):
 			# falling piece has landed, set it on the board
 			self.setPiece(self.fallingPiece)
