@@ -3,6 +3,7 @@ import mygrad as mg
 from mygrad.nnet.activations import softmax
 from mygrad.nnet.losses import softmax_crossentropy
 from TetrisConstants import *
+import time
 
 class TetrisModel:
 	def __init__(self):
@@ -44,14 +45,23 @@ class TetrisML:
 					grid[tetrisBoard.fallingPiece.x + x, tetrisBoard.fallingPiece.y + y] = 2
 		return grid.ravel()
 	def step(self, tetrisBoard): # Called each step of the game
+		temp = time.time()
 		data = self.preprocess(tetrisBoard)
+		print("Preprocess: {}".format(time.time() - temp))
+		temp = time.time()
 		outNeurons = self.model.policyForward(data)
+		print("Forward: {}".format(time.time() - temp))
+		temp = time.time()
 		probabilities = softmax(outNeurons)
 		choice = np.random.choice(np.arange(len(probabilities)), p=probabilities)
 		reward = np.zeros(probabilities.shape, dtype=int)
 		reward[choice] = 1
+		print("Choice: {}".format(time.time() - temp))
+		temp = time.time()
 		loss = softmax_crossentropy(outNeurons.reshape(1, len(outNeurons)), reward)
 		loss.backward()
+		print("Backprop: {}".format(time.time() - temp))
+		temp = time.time()
 		# Store the derivatives - model['W1'] and model['W2']
 		self.derivatives.append(self.model.getDerivatives())
 		loss.null_gradients()
@@ -59,6 +69,7 @@ class TetrisML:
 		deltaScore = tetrisBoard.score - self.prevscores.get(tetrisBoard, 0)
 		self.prevscores[tetrisBoard] = tetrisBoard.score
 		self.rewards.append(deltaScore)
+		print("Record: {}".format(time.time() - temp))
 		return choice
 	def gameover(self): # Called when lose to gradient descent
 		self.model.gradientDescent(self.derivatives, self.rewards)
