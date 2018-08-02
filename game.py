@@ -1,45 +1,101 @@
 from Color import Color
 from TetrisBoard import TetrisBoard
-import time
+import time, random
 
+ratio = 40
 class TetrisGame:
 	def __init__(self):
 		self.close_requested = False
 		self.target_fps = 60
-		self.window_size = (30 * 40, 20 * 40)
+		self.window_size = (3 * 10 * ratio, 1 * 22 * ratio)
 		self.title = "Tetris"
 	def start(self):
 		# Init
 		self.screen = pygame.display.set_mode(self.window_size)
 		pygame.display.set_caption(self.title)
 		self.clock = pygame.time.Clock()
-		board = TetrisBoard(10, 20, *self.window_size, seed=0)
+		board = TetrisBoard(10, 22, *self.window_size, seed = random.seed(), ratio = ratio)
 		lastUpdate = time.time()
+		leftTime = 0
+		rightTime = 0
+		verTime = 0
+		upTime = 0
 		UPDATE_INTERVAL = 1
+		HORIZONTAL_INTERVAL = 0.1
+		DOWN_INTERVAL = 0.05
+		ROTATIONAL_INTERVAL = 0.33
+
+		up = False
+		left = False
+		right = False
+		down = False
 		# Main Game Loop
 		while not self.close_requested:
 			# Handles "X" button of window
-			playing = True
+			spiked = False
 			for event in pygame.event.get():
 				if event.type == pygame.QUIT:
 					self.close_requested = True
+				#press button
 				if event.type == pygame.KEYDOWN:
 					if event.key == pygame.K_UP:
-						board.rotateFallingPiece(1)
+						if(not up): #inital press
+							upTime = time.time()
+							board.rotateFallingPiece(1)#for tapping the button vs holding it
+						up = True
 					if event.key == pygame.K_LEFT:
-						board.moveFallingPiece(moveX=-1, moveY=0)
+						if(not left): #inital press
+							leftTime = time.time()
+							board.moveFallingPiece(moveX=-1, moveY=0)#for tapping the button vs holding it
+						left = True
 					if event.key == pygame.K_RIGHT:
-						board.moveFallingPiece(moveX=1, moveY=0)
+						if(not right):#inital press
+							rightTime = time.time()
+							board.moveFallingPiece(moveX=1, moveY=0) #for tapping the button vs holding it
+						right = True
 					if event.key == pygame.K_DOWN:
-						board.moveFallingPiece(moveX=0, moveY=1)
+						if(not down):#initial press
+							verTime = time.time()
+							board.moveFallingPiece(moveX=0, moveY=1)#for tapping the button vs holding it
+						down = True
 					if event.key == pygame.K_SPACE:
 						board.spike()
-						board.update()
+						spiked = True
+					#release button
+				elif event.type == pygame.KEYUP:
+					if event.key == pygame.K_UP:
+						up = False
+					if event.key == pygame.K_LEFT:
+						left = False
+					if event.key == pygame.K_RIGHT:
+						right = False
+					if event.key == pygame.K_DOWN:
+						down = False
+			#execute hold
+			if(up):
+				if upTime + ROTATIONAL_INTERVAL < time.time():#rotates every 1/3 second
+					board.rotateFallingPiece(1)
+					upTime += ROTATIONAL_INTERVAL
+			if(left):
+				if leftTime + HORIZONTAL_INTERVAL < time.time():#moves left every .1 seconds
+					board.moveFallingPiece(moveX=-1, moveY=0)
+					leftTime += HORIZONTAL_INTERVAL
+			if(right):
+				if rightTime + HORIZONTAL_INTERVAL < time.time():#mvoes right every .1 seconds
+					board.moveFallingPiece(moveX=1, moveY=0)
+					rightTime += HORIZONTAL_INTERVAL
+			if(down):
+				if verTime + DOWN_INTERVAL < time.time():#moves down every .01 seconds
+					board.moveFallingPiece(moveX=0, moveY=1)
+					verTime += DOWN_INTERVAL
 			# Updates the game
 			lose = False
 			if lastUpdate + UPDATE_INTERVAL < time.time():
-				if(not board.update()):
-					lose = True
+				if(not spiked):
+					if(not board.update()):
+						lose = True
+					else:
+						lastUpdate += UPDATE_INTERVAL
 				else:
 					lastUpdate += UPDATE_INTERVAL
 			# Check for lose

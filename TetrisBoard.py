@@ -4,13 +4,14 @@ import pygame
 from Color import Color
 
 class TetrisBoard:
-	def __init__(self, width, height, renderWidth, renderHeight, seed):
+	def __init__(self, width, height, renderWidth, renderHeight, seed, ratio):
 		self.random = np.random.RandomState(seed) # Initialize random with seed
 		self.width = width
 		self.height = height
+		self.ratio = ratio
 		self.grid = self.createBlankGrid()
 		self.startX = int(width / 2 - TetrisConstants.TEMPLATE_WIDTH / 2)
-		self.startY = 0
+		self.startY =  0
 		self.fallingPiece = self.getRandomNewPiece()
 		self.nextPiece = self.getRandomNewPiece()
 		self.score = 0
@@ -76,6 +77,12 @@ class TetrisBoard:
 		while(self.isValidPosition(self.fallingPiece, adjustY = adjustY)):
 			adjustY += 1
 		self.moveFallingPiece(moveX = 0, moveY = adjustY - 1)
+		if(not self.isValidPosition(self.nextPiece)):
+			return False #loss condition
+		self.setPiece(self.fallingPiece)
+		self.removeCompletedLines()
+		self.fallingPiece = self.nextPiece
+		self.nextPiece = self.getRandomNewPiece()
 	def rotateFallingPiece(self, rotate):
 		targetRotation = (self.fallingPiece.rotation + rotate) % len(TetrisConstants.PIECES[self.fallingPiece.type].template)
 		if self.isValidPosition(self.fallingPiece, rotation=targetRotation):
@@ -88,10 +95,10 @@ class TetrisBoard:
 			# falling piece has landed, set it on the board
 			self.setPiece(self.fallingPiece)
 			self.removeCompletedLines()
+			if(not self.isValidPosition(self.nextPiece)):
+				return False #loss condition
 			self.fallingPiece = self.nextPiece
 			#check if anything is on top
-			if(not self.isValidPosition(self.fallingPiece)):
-				return False #loss condition
 			self.nextPiece = self.getRandomNewPiece()
 		else:
 			self.fallingPiece.y += 1
@@ -114,12 +121,12 @@ class TetrisBoard:
 					pygame.draw.rect(screen, self.border(TetrisConstants.PIECES[self.fallingPiece.type].color), [(self.fallingPiece.x + x) * gridWidth + shiftx, (self.fallingPiece.y + y) * gridHeight + shifty, gridWidth, gridHeight], 3)
 					pygame.draw.rect(screen, TetrisConstants.PIECES[self.fallingPiece.type].color, [(self.fallingPiece.x + x) * gridWidth + shiftx, (self.fallingPiece.y + y) * gridHeight + shifty, gridWidth, gridHeight])
 		# Render Next Piece
-		pygame.draw.rect(screen, (0, 130, 255), [80, 80, gridWidth * 6, gridHeight * 6])
+		pygame.draw.rect(screen, (0, 130, 255), [self.ratio, self.ratio, gridWidth * 6, gridHeight * 6])
 		for x in range(TetrisConstants.TEMPLATE_WIDTH):
 			for y in range(TetrisConstants.TEMPLATE_HEIGHT):
 				if not self.getTemplate(self.nextPiece, x, y) == BLANK:
-					pygame.draw.rect(screen, self.border(TetrisConstants.PIECES[self.nextPiece.type].color), [(self.nextPiece.x + x) * gridWidth + 10, (self.nextPiece.y + y) * gridHeight + 100, gridWidth, gridHeight], 3)
-					pygame.draw.rect(screen, TetrisConstants.PIECES[self.nextPiece.type].color, [(self.nextPiece.x + x) * gridWidth + 10, (self.nextPiece.y + y) * gridHeight + 100, gridWidth, gridHeight])
+					pygame.draw.rect(screen, self.border(TetrisConstants.PIECES[self.nextPiece.type].color), [(self.nextPiece.x + x) * gridWidth - self.ratio//3, (self.nextPiece.y + y) * gridHeight + self.ratio + 1, gridWidth, gridHeight], 3)
+					pygame.draw.rect(screen, TetrisConstants.PIECES[self.nextPiece.type].color, [(self.nextPiece.x + x) * gridWidth - self.ratio//3, (self.nextPiece.y + y) * gridHeight + self.ratio + 1, gridWidth, gridHeight])
 	def changeScore(self, lines):
 		if(lines == 1):
 			score = 40
@@ -133,22 +140,22 @@ class TetrisBoard:
 			score = 0
 		self.score += self.level * score
 	def lose(self, screen, size):
-		basicfont = pygame.font.SysFont(None, 50)
-		text = basicfont.render('You lose!', True, (255, 0, 0), Color.BLACK)
+		basicfont = pygame.font.SysFont(None, 2 * self.ratio)
+		text = basicfont.render('You lose!', True, Color.WHITE, Color.BLACK)
 		textrect = text.get_rect(centerx = int(size[0]/2), centery = int(size[1]/2))
 		screen.blit(text, textrect)
 	def showScore(self, screen, size):
-		basicfont = pygame.font.SysFont(None, 50)
-		text = basicfont.render(str(self.score), True, (255, 0, 0), (255,239,213))
-		textrect = text.get_rect(topright = (int(size[0] - 100 - text.get_rect()[0]/2), 50))
+		basicfont = pygame.font.SysFont(None, self.ratio)
+		text = basicfont.render("Score: " + str(self.score), True, Color.BLACK, (255,239,213))
+		textrect = text.get_rect(topright = (size[0] - self.ratio * 2, self.ratio))
 		screen.blit(text, textrect)
 	def showLevel(self,screen,size):
-		basicfont = pygame.font.SysFont(None, 50)
-		text = basicfont.render(str(self.level), True, (255, 0, 0), (255,239,213))
-		textrect = text.get_rect(topright = (int(size[0] - 100 - text.get_rect()[0]/2), 100))
+		basicfont = pygame.font.SysFont(None, self.ratio)
+		text = basicfont.render("Level: " + str(self.level), True, Color.BLACK, (255,239,213))
+		textrect = text.get_rect(topright = (size[0] - self.ratio * 2, self.ratio * 2))
 		screen.blit(text, textrect)
 	#only for styling
 	def border(self, color):
 		arr = np.array(color, dtype = np.int)
 		center = ((arr < 128) - .5) * 2
-		return tuple(arr + center * 30)
+		return tuple(arr + center * 40)
