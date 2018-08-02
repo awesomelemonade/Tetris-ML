@@ -19,41 +19,47 @@ class TetrisGame:
 		# Main Game Loop
 		while not self.close_requested:
 			# Handles "X" button of window
+			playing = True
 			for event in pygame.event.get():
 				if event.type == pygame.QUIT:
 					self.close_requested = True
 				if event.type == pygame.KEYDOWN:
-					if event.key == pygame.K_w:
+					if event.key == pygame.K_UP:
 						board.rotateFallingPiece(1)
-					if event.key == pygame.K_a:
+					if event.key == pygame.K_LEFT:
 						board.moveFallingPiece(moveX=-1, moveY=0)
-					if event.key == pygame.K_d:
+					if event.key == pygame.K_RIGHT:
 						board.moveFallingPiece(moveX=1, moveY=0)
-					if event.key == pygame.K_s:
+					if event.key == pygame.K_DOWN:
 						board.moveFallingPiece(moveX=0, moveY=1)
 					if event.key == pygame.K_SPACE:
 						board.spike()
 						board.update()
 			# Updates the game
+			lose = False
 			if lastUpdate + UPDATE_INTERVAL < time.time():
 				if(not board.update()):
-					self.lose()
+					lose = True
 				else:
 					lastUpdate += UPDATE_INTERVAL
-			# Draws the game
-			self.screen.fill((255,239,213))
-			board.render(self.screen, * self.window_size, shiftx = self.window_size[0]/3)
+			# Check for lose
+			if lose:
+				board.lose(self.screen, self.window_size)
+			else:
+				#Draw the Board
+				self.screen.fill((255,239,213))
+				board.render(self.screen, * self.window_size, shiftx = self.window_size[0]/3)
+				board.showScore(self.screen, self.window_size)
+				board.showLevel(self.screen, self.window_size)
+				#levelcheck
+				if(board.linesCleared >= board.level * 10):
+					board.level += 1
 			#pygame.draw.rect(self.screen, Color.BLACK, [x, y, width, height], 0)
 
 			pygame.display.flip()
 			self.clock.tick(self.target_fps)
-	def lose(self):
-		basicfont = pygame.font.SysFont("Lose Message", 48)
-		text = basicfont.render('lol you suck', True, (255, 0, 0), (255, 255, 255))
-		textrect = text.get_rect()
-		textrect.centerx = self.screen.get_rect().centerx
-		textrect.centery = self.screen.get_rect().centery
-		self.screen.blit(text, textrect)
+
+
 
 import pygame
 pygame.init()

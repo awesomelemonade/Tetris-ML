@@ -15,6 +15,7 @@ class TetrisBoard:
 		self.nextPiece = self.getRandomNewPiece()
 		self.score = 0
 		self.level = 1
+		self.linesCleared = 0
 	def createBlankGrid(self):
 		grid = np.chararray((self.width, self.height))
 		grid[:] = BLANK
@@ -30,6 +31,7 @@ class TetrisBoard:
 				numLinesRemoved += 1
 		#scoring
 		self.changeScore(numLinesRemoved)
+		self.linesCleared += numLinesRemoved
 
 	def isOnBoard(self, x, y):
 		return x >= 0 and x < self.width and y >= 0 and y < self.height
@@ -112,7 +114,7 @@ class TetrisBoard:
 					pygame.draw.rect(screen, self.border(TetrisConstants.PIECES[self.fallingPiece.type].color), [(self.fallingPiece.x + x) * gridWidth + shiftx, (self.fallingPiece.y + y) * gridHeight + shifty, gridWidth, gridHeight], 3)
 					pygame.draw.rect(screen, TetrisConstants.PIECES[self.fallingPiece.type].color, [(self.fallingPiece.x + x) * gridWidth + shiftx, (self.fallingPiece.y + y) * gridHeight + shifty, gridWidth, gridHeight])
 		# Render Next Piece
-		pygame.draw.rect(screen, (0, 130, 255), [100, 100, gridWidth * 5, gridHeight * 5])
+		pygame.draw.rect(screen, (0, 130, 255), [80, 80, gridWidth * 6, gridHeight * 6])
 		for x in range(TetrisConstants.TEMPLATE_WIDTH):
 			for y in range(TetrisConstants.TEMPLATE_HEIGHT):
 				if not self.getTemplate(self.nextPiece, x, y) == BLANK:
@@ -123,12 +125,29 @@ class TetrisBoard:
 			score = 40
 		elif(lines == 2):
 			score = 100
-		elif(lines== 3):
+		elif(lines == 3):
 			score = 300
-		else:
+		elif(lines == 4):
 			score = 1200
+		else:
+			score = 0
 		self.score += self.level * score
-	#onyl for styling
+	def lose(self, screen, size):
+		basicfont = pygame.font.SysFont(None, 50)
+		text = basicfont.render('You lose!', True, (255, 0, 0), Color.BLACK)
+		textrect = text.get_rect(centerx = int(size[0]/2), centery = int(size[1]/2))
+		screen.blit(text, textrect)
+	def showScore(self, screen, size):
+		basicfont = pygame.font.SysFont(None, 50)
+		text = basicfont.render(str(self.score), True, (255, 0, 0), (255,239,213))
+		textrect = text.get_rect(topright = (int(size[0] - 100 - text.get_rect()[0]/2), 50))
+		screen.blit(text, textrect)
+	def showLevel(self,screen,size):
+		basicfont = pygame.font.SysFont(None, 50)
+		text = basicfont.render(str(self.level), True, (255, 0, 0), (255,239,213))
+		textrect = text.get_rect(topright = (int(size[0] - 100 - text.get_rect()[0]/2), 100))
+		screen.blit(text, textrect)
+	#only for styling
 	def border(self, color):
 		arr = np.array(color, dtype = np.int)
 		center = ((arr < 128) - .5) * 2
