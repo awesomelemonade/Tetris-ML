@@ -106,8 +106,8 @@ class TetrisBoard:
 		for x in range(TetrisConstants.TEMPLATE_WIDTH):
 			for y in range(TetrisConstants.TEMPLATE_HEIGHT):
 				if not self.getTemplate(piece, x, y) == BLANK:
-					pygame.draw.rect(screen, self.border(TetrisConstants.PIECES[piece.type].color), [(piece.x + x) * gridWidth + gridShiftX, (piece.y + y) * gridHeight, gridWidth, gridHeight], 3)
-					pygame.draw.rect(screen, TetrisConstants.PIECES[piece.type].color, [(piece.x + x) * gridWidth + gridShiftX, (piece.y + y) * gridHeight, gridWidth, gridHeight])
+					pygame.draw.rect(screen, self.border(TetrisConstants.PIECES[piece.type].color), [(piece.x + x) * gridWidth + gridShiftX, (piece.y + y) * gridHeight, gridWidth, gridHeight], 2)
+					pygame.draw.rect(screen, TetrisConstants.PIECES[piece.type].color, [(piece.x + x) * gridWidth + gridShiftX + 1, (piece.y + y) * gridHeight + 1, gridWidth - 2, gridHeight - 2])
 	def render(self, screen, renderWidth, renderHeight):
 		gridWidth = renderWidth / (self.width)
 		gridHeight = renderHeight / (self.height)
@@ -118,8 +118,8 @@ class TetrisBoard:
 		for x in range(self.width):
 			for y in range(self.height):
 				if not self.grid[x, y] == BLANK:
-					pygame.draw.rect(screen, self.border(TetrisConstants.PIECES[self.grid[x, y]].color), [x * gridWidth + gridShiftX, y * gridHeight, gridWidth, gridHeight], 3)
-					pygame.draw.rect(screen, TetrisConstants.PIECES[self.grid[x, y]].color , [x * gridWidth + gridShiftX, y * gridHeight, gridWidth, gridHeight])
+					pygame.draw.rect(screen, self.border(TetrisConstants.PIECES[self.grid[x, y]].color), [x * gridWidth + gridShiftX, y * gridHeight, gridWidth, gridHeight], 2)
+					pygame.draw.rect(screen, TetrisConstants.PIECES[self.grid[x, y]].color , [x * gridWidth + gridShiftX + 1, y * gridHeight + 1, gridWidth - 2, gridHeight - 2])
 		# Render Falling Piece
 		self.renderPiece(screen, self.fallingPiece, gridWidth, gridHeight, gridShiftX)
 		# Render Next Piece
