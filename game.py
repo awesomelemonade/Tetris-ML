@@ -13,9 +13,10 @@ class TetrisGame:
 		self.screen = pygame.display.set_mode(self.window_size)
 		pygame.display.set_caption(self.title)
 		self.clock = pygame.time.Clock()
-		board = TetrisBoard(10, 20, *self.window_size, seed=0)
+		board = TetrisBoard(10, 20, seed=0)
 		lastUpdate = time.time()
 		UPDATE_INTERVAL = 1
+		environment = None
 		# Main Game Loop
 		while not self.close_requested:
 			# Handles "X" button of window
@@ -23,23 +24,26 @@ class TetrisGame:
 				if event.type == pygame.QUIT:
 					self.close_requested = True
 				if event.type == pygame.KEYDOWN:
-					if event.key == pygame.K_w:
-						board.rotateFallingPiece(1)
-					if event.key == pygame.K_a:
-						board.moveFallingPiece(moveX=-1, moveY=0)
-					if event.key == pygame.K_d:
-						board.moveFallingPiece(moveX=1, moveY=0)
-					if event.key == pygame.K_s:
-						board.moveFallingPiece(moveX=0, moveY=1)
-					if event.key == pygame.K_SPACE:
-						board.spike()
-						board.update()
+					if environment is None:
+						if event.key == pygame.K_w:
+							board.rotateFallingPiece(1)
+						if event.key == pygame.K_a:
+							board.moveFallingPiece(moveX=-1, moveY=0)
+						if event.key == pygame.K_d:
+							board.moveFallingPiece(moveX=1, moveY=0)
+						if event.key == pygame.K_s:
+							board.moveFallingPiece(moveX=0, moveY=1)
+						if event.key == pygame.K_SPACE:
+							board.spike()
+							board.update()
 			# Updates the game
 			if lastUpdate + UPDATE_INTERVAL < time.time():
-				if(not board.update()):
-					self.lose()
-				else:
-					lastUpdate += UPDATE_INTERVAL
+				if not environment is None:
+					environment.step(board)
+				if not board.update():
+					environment.gameover()
+					break
+				lastUpdate += UPDATE_INTERVAL
 			# Draws the game
 			self.screen.fill(Color.BLACK)
 			board.render(self.screen, *self.window_size)

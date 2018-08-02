@@ -3,7 +3,7 @@ from TetrisConstants import *
 import pygame
 
 class TetrisBoard:
-	def __init__(self, width, height, renderWidth, renderHeight, seed):
+	def __init__(self, width, height, seed):
 		self.random = np.random.RandomState(seed) # Initialize random with seed
 		self.width = width
 		self.height = height
@@ -15,11 +15,11 @@ class TetrisBoard:
 		self.score = 0
 		self.level = 1
 	def createBlankGrid(self):
-		grid = np.chararray((self.width, self.height))
+		grid = np.empty((self.width, self.height), dtype=str)
 		grid[:] = BLANK
 		return grid
 	def isCompleteLine(self, grid, y):
-		return np.all(grid[:, y].decode() != BLANK)
+		return np.all(grid[:, y] != BLANK)
 	def removeCompletedLines(self):
 		numLinesRemoved = 0
 		for y in range(0, self.height): # Go from bottom up
@@ -39,7 +39,7 @@ class TetrisBoard:
 					continue
 				if not self.isOnBoard(piece.x + x + adjustX, piece.y + y + adjustY):
 					return False
-				if self.grid[piece.x + x + adjustX, piece.y + y + adjustY].decode() != BLANK:
+				if self.grid[piece.x + x + adjustX, piece.y + y + adjustY] != BLANK:
 					return False
 		return True
 	def setPiece(self, piece):
@@ -99,8 +99,8 @@ class TetrisBoard:
 		# Render Grid
 		for x in range(self.width):
 			for y in range(self.height):
-				if not self.grid[x, y].decode() == BLANK:
-					pygame.draw.rect(screen, TetrisConstants.PIECES[self.grid[x, y].decode()].color, [x * gridWidth, y * gridHeight, gridWidth, gridHeight])
+				if not self.grid[x, y] == BLANK:
+					pygame.draw.rect(screen, TetrisConstants.PIECES[self.grid[x, y]].color, [x * gridWidth, y * gridHeight, gridWidth, gridHeight])
 		# Render Falling Piece
 		for x in range(TetrisConstants.TEMPLATE_WIDTH):
 			for y in range(TetrisConstants.TEMPLATE_HEIGHT):
