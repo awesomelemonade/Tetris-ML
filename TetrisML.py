@@ -5,6 +5,24 @@ from mygrad.nnet.losses import softmax_crossentropy
 from TetrisConstants import *
 import time
 
+class AbstractModel:
+	def __init__(self, layers):
+		self.weights = []
+		for i in range(len(layers) - 1):
+			self.weights.append(mg.Tensor(np.random.randn(layers[i], layers[i + 1])))
+	def policyForward(self, data):
+		data = mg.Tensor(data)
+		for i in range(len(weights) - 1):
+			data = mg.matmul(data, self.weights[i]) # hidden layers
+			data[data < 0] = 0 # ReLU
+		return mg.matmul(data, self.weights[-1]) # outNeurons
+	def getDerivatives(self):
+		return (weight.grad for weight in self.weights)
+	def gradientDescent(self, derivatives, rewards):
+		rewards = np.array(rewards, dtype=np.float64)
+		zipped = np.moveaxis(np.array(weight), 0, -1) for weight in zip(*derivatives)
+		for weight, derivative in zip(self.weights, derivatives):
+			weight += np.sum(self.learning_rate * derivative * rewards, axis=-1)
 class TetrisModel:
 	def __init__(self):
 		self.H = 200 # Number of hidden neurons
