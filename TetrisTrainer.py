@@ -9,11 +9,10 @@ class TetrisTrainer:
 		env = TetrisModel(numBoards)
 		self.BLOCK_SIZE = 40
 		self.window_size = (3 * 10 * self.BLOCK_SIZE, 1 * 20 * self.BLOCK_SIZE)
-		#self.screen = pygame.display.set_mode(self.window_size)
-		#pygame.display.set_caption("Tetris Trainer")
+		self.screen = pygame.display.set_mode(self.window_size)
+		pygame.display.set_caption("Tetris Trainer")
 		self.clock = pygame.time.Clock()
 		for i in range(100):
-			#print(np.sum(env.model.model['W1'].data))
 			boards = [TetrisBoard(10, 20, seed=0) for j in range(numBoards)]
 			done = np.zeros(len(boards))
 			while not np.all(done):
@@ -23,25 +22,13 @@ class TetrisTrainer:
 				for j, board in enumerate(boards):
 					if not board.update():
 						done[j] = True
+					if j == 0:
+						self.screen.fill(Color.WHITE)
+						board.render(self.screen, *self.window_size)
+						pygame.display.flip()
 				env.evaluate(boards)
 			print("Descending: {}".format(i))
 			env.gradientDescent()
-			'''
-				print("Stepping Environment: {}".format(time.time() - temp))
-				temp = time.time()
-				print("Executing Move: {}".format(time.time() - temp))
-				temp = time.time()
-				if not board.update():
-					env.gameover()
-					break
-				print("Updating Board: {}".format(time.time() - temp))
-				temp = time.time()
-				self.screen.fill(Color.WHITE)
-				board.render(self.screen, *self.window_size)
-				pygame.display.flip()
-				print("Rendering Board: {}".format(time.time() - temp))
-				self.clock.tick(60)
-			print("Score: {}".format(board.score))'''
 	def execute(self, board, action):
 		if action == 0:
 			board.rotateFallingPiece(1)

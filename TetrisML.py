@@ -87,24 +87,3 @@ class TetrisModel:
 				self.rewards[i].append(0)
 	def gradientDescent(self):
 		self.model.gradientDescent(self.learning_rate, self.derivatives, self.rewards)
-	'''
-	def policyForward(self, data):
-		data = mg.Tensor(data.astype(int)) # Convert to Tensor
-		hiddenNeurons = mg.matmul(data, self.model['W1']) # Matrix multiply weights #1
-		hiddenNeurons[hiddenNeurons < 0] = 0 # ReLU
-		outNeurons = mg.matmul(hiddenNeurons, self.model['W2']) # Matrix multiply weights #2
-		return outNeurons
-	def getDerivatives(self): # Extracts derivatives from backprop
-		return (self.model['W1'].grad, self.model['W2'].grad)
-	def gradientDescent(self): # rewards are delta score
-		rewards = np.array(self.rewards, dtype=np.float64)
-		# derivatives = list of list
-		dW1, dW2 = zip(*self.derivatives)
-		dW1 = np.moveaxis(np.array(dW1), 0, -1)
-		dW2 = np.moveaxis(np.array(dW2), 0, -1)
-		rewards[-1] = - 1 / len(rewards) # discourage all steps slightly because we lost
-		rewards = np.cumsum(rewards[::-1])[::-1]
-		self.model['W1'] += np.sum(self.learning_rate * dW1 * rewards, axis=-1)
-		self.model['W2'] += np.sum(self.learning_rate * dW2 * rewards, axis=-1)
-		self.reset()
-	'''
