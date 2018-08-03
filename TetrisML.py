@@ -37,6 +37,13 @@ class TetrisML:
 		self.derivatives = []
 		self.rewards = []
 		self.prevscores = {}
+		self.cache = {}
+		self.cache['arange'] = np.arange(5)
+		self.cache['choice'] = []
+		for i in range(5):
+			temp = np.zeros(5, dtype=int)
+			temp[i] = 1
+			self.cache['choice'].append(temp)
 	def preprocess(self, tetrisBoard): # Preprocesses the tetris board to a flattened numpy array
 		grid = tetrisBoard.grid != BLANK
 		for x in range(TetrisConstants.TEMPLATE_WIDTH):
@@ -50,12 +57,11 @@ class TetrisML:
 		print("Preprocess: {}".format(time.time() - temp))
 		temp = time.time()
 		outNeurons = self.model.policyForward(data)
+		probabilities = softmax(outNeurons)
 		print("Forward: {}".format(time.time() - temp))
 		temp = time.time()
-		probabilities = softmax(outNeurons)
-		choice = np.random.choice(np.arange(len(probabilities)), p=probabilities)
-		reward = np.zeros(probabilities.shape, dtype=int)
-		reward[choice] = 1
+		choice = np.random.choice(self.cache['arange'], p=probabilities)
+		reward = self.cache['choice'][choice]
 		print("Choice: {}".format(time.time() - temp))
 		temp = time.time()
 		loss = softmax_crossentropy(outNeurons.reshape(1, len(outNeurons)), reward)
