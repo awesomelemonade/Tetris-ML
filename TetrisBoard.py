@@ -20,6 +20,13 @@ class TetrisBoard:
 		grid = np.empty((self.width, self.height), dtype=str)
 		grid[:] = BLANK
 		return grid
+	def isBlankLine(self, y):
+		return np.all(self.grid[:, y] == BLANK)
+	def lowestBlankLine(self):
+		for y in range(self.height - 1, -1, -1):
+			if self.isBlankLine(y):
+				return y
+		return self.height
 	def isCompleteLine(self, grid, y):
 		return np.all(grid[:, y] != BLANK)
 	def removeCompletedLines(self):
@@ -32,7 +39,6 @@ class TetrisBoard:
 		#scoring
 		self.changeScore(numLinesRemoved)
 		self.linesCleared += numLinesRemoved
-
 	def isOnBoard(self, x, y):
 		return x >= 0 and x < self.width and y >= 0 and y < self.height
 	def isValidPosition(self, piece, adjustX=0, adjustY=0, rotation=None):

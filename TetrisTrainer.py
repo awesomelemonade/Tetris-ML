@@ -3,21 +3,25 @@ from TetrisBoard import TetrisBoard
 from TetrisML import *
 from Color import Color
 import time
+import signal
+import sys
 class TetrisTrainer:
 	def start(self):
 		numBoards = 20
-		env = TetrisModel(numBoards)
+		self.env = TetrisModel(numBoards)
 		self.BLOCK_SIZE = 40
 		self.window_size = (3 * 10 * self.BLOCK_SIZE, 1 * 20 * self.BLOCK_SIZE)
 		self.screen = pygame.display.set_mode(self.window_size)
 		pygame.display.set_caption("Tetris Trainer")
 		self.clock = pygame.time.Clock()
-		for i in range(100):
+		signal.signal(signal.SIGINT, self.signalHandler)
+		lmao = 0
+		while True:
 			boards = [TetrisBoard(10, 20, seed=0) for j in range(numBoards)]
 			done = np.zeros(len(boards))
 			while not np.all(done):
 				temp = time.time()
-				env.step(boards, self.execute, done)
+				self.env.step(boards, self.execute, done)
 				for j, board in enumerate(boards):
 					if done[j]:
 						continue
@@ -27,9 +31,10 @@ class TetrisTrainer:
 						self.screen.fill(Color.WHITE)
 						board.render(self.screen, *self.window_size)
 						pygame.display.flip()
-				env.evaluate(boards, done)
-			env.gradientDescent()
-		env.model.save("weights.pkl")
+				self.env.evaluate(boards, done)
+			self.env.gradientDescent()
+			print(lmao)
+			lmao+=1
 	def execute(self, board, action):
 		if action == 0:
 			board.rotateFallingPiece(1)
@@ -41,7 +46,9 @@ class TetrisTrainer:
 			board.moveFallingPiece(moveX=0, moveY=1)
 		if action == 4:
 			pass # do nothing
-
+	def signalHandler(self, sig, frame):
+		self.env.model.save("weights.pkl")
+		sys.exit(0)
 import pygame
 pygame.init()
 trainer = TetrisTrainer()
