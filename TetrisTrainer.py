@@ -17,18 +17,19 @@ class TetrisTrainer:
 			done = np.zeros(len(boards))
 			while not np.all(done):
 				temp = time.time()
-				generator = (boards[j] for j in range(len(done)) if not done[j])
-				env.step(boards, self.execute)
+				env.step(boards, self.execute, done)
 				for j, board in enumerate(boards):
+					if done[j]:
+						continue
 					if not board.update():
 						done[j] = True
 					if j == 0:
 						self.screen.fill(Color.WHITE)
 						board.render(self.screen, *self.window_size)
 						pygame.display.flip()
-				env.evaluate(boards)
-			print("Descending: {}".format(i))
+				env.evaluate(boards, done)
 			env.gradientDescent()
+		env.model.save("weights.pkl")
 	def execute(self, board, action):
 		if action == 0:
 			board.rotateFallingPiece(1)

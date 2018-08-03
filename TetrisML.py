@@ -4,6 +4,7 @@ from mygrad.nnet.activations import softmax
 from mygrad.nnet.losses import softmax_crossentropy
 from TetrisConstants import *
 import time
+import pickle
 
 class AbstractModel:
 	def __init__(self, layers):
@@ -28,8 +29,12 @@ class AbstractModel:
 			boardRewards = np.array(boardRewards, dtype=np.float64)
 			for weight, derivative, reward in zip(self.weights, zipped, boardRewards):
 				weight -= np.sum(learning_rate * derivative * reward, axis=-1)
+	def save(self, filename):
+		with open("grades.pkl", mode="wb") as opened_file:
+			pickle.dump(self.weights, opened_file)
 class TetrisModel:
 	def __init__(self, size):
+		self.averageTurns = []
 		self.size = size
 		self.layers = [200, 50, 50, 5]
 		self.model = AbstractModel(self.layers)
@@ -59,8 +64,10 @@ class TetrisModel:
 					grid[tetrisBoard.fallingPiece.x + x, tetrisBoard.fallingPiece.y + y] = -1
 		# Process Next Piece TODO
 		return grid.ravel() # Flatten
-	def step(self, tetrisBoards, executor): # calculates and stores derivatives
+	def step(self, tetrisBoards, executor, done): # calculates and stores derivatives
 		for i, tetrisBoard in enumerate(tetrisBoards):
+			if done[i]:
+				continue
 			#temp = time.time()
 			data = self.preprocess(tetrisBoard)
 			#print("Preprocess: {}".format(time.time() - temp))
@@ -81,9 +88,18 @@ class TetrisModel:
 			loss.null_gradients()
 			#print("Store: {}".format(time.time() - temp))
 			executor(tetrisBoard, choice)
-	def evaluate(self, tetrisBoards): # calculates rewards
+	def evaluate(self, tetrisBoards, done): # calculates rewards
 		for i, tetrisBoard in enumerate(tetrisBoards):
-			for j in range(len(self.derivatives[i])):
-				self.rewards[i].append(0)
+			if done[i]:
+				continue
+			self.rewards[i].append(0)
 	def gradientDescent(self):
+		self.averageTurns.extend([len(derivative) for derivative in self.derivatives])
+		runningAverage = sum(self.averageTurns) / len(self.averageTurns)
+		averageTurns = sum([len(derivative) for derivative in self.derivatives]) / len(self.derivatives)
+		for reward in self.rewards: # Loops through boards
+			for i in range(len(reward)):
+				reward[i] = len(reward) - runningAverage
+		print("Average Turns: {} - {}".format(averageTurns, runningAverage))
 		self.model.gradientDescent(self.learning_rate, self.derivatives, self.rewards)
+		self.reset()
