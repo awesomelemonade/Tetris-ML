@@ -125,6 +125,7 @@ class TetrisModel:
 		
 		self.model.gradientDescent(self.learningRate, self.derivatives, self.rewards)
 		self.reset()
+from datetime import datetime
 class NewTrainer:
 	def start(self):
 		self.BLOCK_SIZE = 40
@@ -134,7 +135,7 @@ class NewTrainer:
 		signal.signal(signal.SIGINT, self.signalHandler)
 		self.env = TetrisModel()
 		while True:
-			boards = [TetrisBoard(10, 20, seed=0) for x in range(50)]
+			boards = [TetrisBoard(10, 20, seed=0) for x in range(20)]
 			done = np.zeros(len(boards))
 			while not np.all(done):
 				self.env.step(boards, done, self.execute)
@@ -148,6 +149,7 @@ class NewTrainer:
 						board.render(self.screen, *self.window_size)
 						pygame.display.flip()
 			self.env.gradientDescent()
+			self.env.model.save(datetime.now().strftime("w-ckpt-%m-%d--%H-%M-%S.pkl"))
 	def execute(self, board, action):
 		if action == 0:
 			board.rotateFallingPiece(1)
@@ -160,6 +162,7 @@ class NewTrainer:
 		if action == 4:
 			pass # do nothing
 	def signalHandler(self, sig, frame):
+		print("Sigkill Received: Saving")
 		self.env.model.save("weights.pkl")
 		sys.exit(0)
 
