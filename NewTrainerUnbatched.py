@@ -15,6 +15,7 @@ from mygrad.nnet.layers import max_pool
 from mynn.initializers.glorot_uniform import glorot_uniform
 from mynn.activations.relu import relu
 import pickle
+from collections import deque
 
 class AbstractModel:
 	def __init__(self):
@@ -48,11 +49,14 @@ class AbstractModel:
 class TetrisModel:
 	def __init__(self):
 		self.model = AbstractModel()
-		self.learningRate = 1e-4
+		self.learningRate = 1e-6
+		self.counter = 0
+		self.runningAverage = deque()
 		self.reset()
 	def reset(self):
 		self.derivatives = []
 		self.rewards = []
+		self.rewardMap = {}
 	def preprocess(self, tetrisBoard):
 		# Process Board
 		grid = tetrisBoard.grid != BLANK
@@ -87,11 +91,32 @@ class TetrisModel:
 			loss = softmax_crossentropy(outNeurons, np.array([choice]))
 			loss.backward()
 			self.derivatives.append(self.model.getDerivatives())
-			self.rewards.append(1 if choice == 2 else 0)
+			if not board in self.rewardMap:
+				self.rewardMap[board] = []
+			self.rewardMap[board].append(len(self.rewards))
+			self.rewards.append(0)
 			loss.null_gradients()
 			executor(board, choice)
 	def gradientDescent(self):
 		# Calculate Rewards TODO
+		tempMap = {}
+		for key in self.rewardMap.keys(): # Loops through all boards
+			temp = len(self.rewardMap[key])
+			tempMap[key] = len(self.rewardMap[key])
+		average = sum(tempMap.values()) / len(tempMap.values())
+		if len(self.runningAverage) == 0 or average > sum(self.runningAverage) / len(self.runningAverage):
+			self.runningAverage.append(average)
+		while len(self.runningAverage) > 3:
+			self.runningAverage.popleft()
+		adjust = sum(self.runningAverage) / len(self.runningAverage)
+		print("#{}: {} - {} - {}".format(self.counter, list(tempMap.values()), average, adjust))
+		for key in tempMap.keys():
+			tempMap[key] = (tempMap[key] - adjust)
+		self.counter += 1
+		for key in self.rewardMap.keys():
+			for value in self.rewardMap[key]:
+				self.rewards[value] = tempMap[key]
+		
 		self.model.gradientDescent(self.learningRate, self.derivatives, self.rewards)
 		self.reset()
 class NewTrainer:
@@ -103,7 +128,7 @@ class NewTrainer:
 		signal.signal(signal.SIGINT, self.signalHandler)
 		self.env = TetrisModel()
 		while True:
-			boards = [TetrisBoard(10, 20, seed=0) for x in range(20)]
+			boards = [TetrisBoard(10, 20, seed=0) for x in range(50)]
 			done = np.zeros(len(boards))
 			while not np.all(done):
 				self.env.step(boards, done, self.execute)
