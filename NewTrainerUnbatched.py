@@ -6,36 +6,34 @@ import time
 import signal
 import sys
 
-import mygrad as mg
-from mygrad.nnet.activations import softmax
-from mygrad.nnet.losses import softmax_crossentropy
-from mynn.layers.conv import conv
-from mynn.layers.dense import dense
-from mygrad.nnet.layers import max_pool
-from mynn.initializers.glorot_uniform import glorot_uniform
-from mynn.activations.relu import relu
 import pickle
 from collections import deque
 
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+import torch.optim as optim
+
 class AbstractModel:
 	def __init__(self):
-		self.conv1 = conv(1, 5, 2, 2, stride=2, padding=0, weight_initializer=glorot_uniform)
-		self.conv2 = conv(5, 10, 2, 2, stride=1, padding=0, weight_initializer=glorot_uniform)
-		self.dense1 = dense(360, 300, weight_initializer=glorot_uniform)
-		self.dense2 = dense(300, 300, weight_initializer=glorot_uniform)
-		self.dense3 = dense(300, 5, weight_initializer=glorot_uniform)
+		self.conv1 = nn.Conv2d(1, 5, (2, 2), stride=2, padding=0)
+		self.conv2 = nn.Conv2d(5, 10, (2, 2), stride=1, padding=0)
+		self.dense1 = nn.Linear(360, 300)
+		self.dense2 = nn.Linear(300, 300)
+		self.dense3 = nn.Linear(300, 5)
 		self.layers = (self.conv1, self.conv2, self.dense1, self.dense2, self.dense3)
 		self.tensors = []
 		for layer in self.layers:
-			for parameter in layer.parameters:
-				self.tensors.append(parameter)
-		self.weights = [parameter.data for parameter in self.tensors]
+			for name, parameter in layer.named_parameters():
+				if parameter.requires_grad:
+					self.tensors.append(parameter)
+		self.weights = [parameter.numpy for parameter in self.tensors]
 	def policyForward(self, data):
-		data = mg.Tensor(data)
+		data = torch.Tensor(data)
 		x = self.conv1(data)
 		x = self.conv2(x)
-		x = relu(self.dense1(x.reshape(x.shape[0], -1)))
-		x = relu(self.dense2(x))
+		x = F.relu(self.dense1(x.reshape(x.shape[0], -1)))
+		x = F.relu(self.dense2(x))
 		return self.dense3(x)
 	def getDerivatives(self):
 		return [parameter.grad for parameter in self.tensors]
@@ -50,7 +48,7 @@ class AbstractModel:
 		with open(filename, mode="rb") as opened_file:
 			weights = pickle.load(opened_file)
 			for weight, parameter in zip(weights, self.tensors):
-				parameter.data = weight
+				parameter.numpy = weight
 class TetrisModel:
 	def __init__(self):
 		self.model = AbstractModel()
@@ -92,16 +90,19 @@ class TetrisModel:
 		boards = [(i, board) for i, board in enumerate(tetrisBoards) if not done[i]]
 		for i, board in boards:
 			outNeurons = self.model.policyForward(self.preprocess(board)[np.newaxis, np.newaxis, :, :])
+			softmax = nn.Softmax()
 			probabilities = softmax(outNeurons)
-			choice = np.random.choice(5, p=probabilities.reshape(5))
-			loss = softmax_crossentropy(outNeurons, np.array([choice]))
+			choice = torch.multinomial(probabilities, 1)[:, 0]
+			loss_func = nn.CrossEntropyLoss()
+			loss = loss_func(outNeurons, choice)
 			loss.backward()
 			self.derivatives.append(self.model.getDerivatives())
 			if not board in self.rewardMap:
 				self.rewardMap[board] = []
 			self.rewardMap[board].append(len(self.rewards))
 			self.rewards.append(0)
-			loss.null_gradients()
+			for t in self.model.tensors:
+				t = 0
 			executor(board, choice)
 	def gradientDescent(self):
 		# Calculate Rewards TODO
@@ -122,7 +123,7 @@ class TetrisModel:
 		for key in self.rewardMap.keys():
 			for value in self.rewardMap[key]:
 				self.rewards[value] = tempMap[key]
-		
+
 		self.model.gradientDescent(self.learningRate, self.derivatives, self.rewards)
 		self.reset()
 class NewTrainer:
