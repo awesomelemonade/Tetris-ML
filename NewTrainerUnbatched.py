@@ -46,9 +46,15 @@ class AbstractModel:
 	def save(self, filename):
 		with open(filename, mode="wb") as opened_file:
 			pickle.dump(self.weights, opened_file)
+	def load(self, filename):
+		with open(filename, mode="rb") as opened_file:
+			weights = pickle.load(opened_file)
+			for weight, parameter in zip(weights, self.tensors):
+				parameter.data = weight
 class TetrisModel:
 	def __init__(self):
 		self.model = AbstractModel()
+		self.model.load("weights.pkl")
 		self.learningRate = 1e-6
 		self.counter = 0
 		self.runningAverage = deque()
