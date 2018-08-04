@@ -89,7 +89,8 @@ class TetrisBoard:
 		self.fallingPiece = self.nextPiece
 		self.nextPiece = self.getRandomNewPiece()
 	def rotateFallingPiece(self, rotate):
-		targetRotation = (self.fallingPiece.rotation + rotate) % len(TetrisConstants.PIECES[self.fallingPiece.type].template)
+		numRotations = len(TetrisConstants.PIECES[self.fallingPiece.type].template)
+		targetRotation = (((self.fallingPiece.rotation + rotate) % numRotations) + numRotations) % numRotations
 		if self.isValidPosition(self.fallingPiece, rotation=targetRotation):
 			self.fallingPiece.rotation = targetRotation
 			return True
