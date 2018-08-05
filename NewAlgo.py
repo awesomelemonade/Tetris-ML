@@ -109,22 +109,25 @@ class TetrisModel:
 		# Print Info
 		gameLengths = [len(self.rewardMap[board]) for board in self.rewardMap.keys()]
 		average = sum(gameLengths) / len(gameLengths)
-		print("#{}: {} - {} - {}".format(self.counter, gameLengths, average))
+		print("#{}: {} - {}".format(self.counter, gameLengths, average))
 		self.counter += 1
 		# Calculate Rewards
-		self.calculateRewards(rewardMap, rewards, 0.99)
+		self.calculateRewards(self.rewardMap, self.rewards, 0.99)
 		# Gradient Descent
 		self.model.gradientDescent(self.learningRate, self.derivatives, self.rewards)
 		self.reset()
-	def calculateRewards(rewardMap, rewards, discount):
+	def calculateRewards(self, rewardMap, rewards, discount):
 		for board in rewardMap.keys():
 			indices = rewardMap[board]
 			discounts = discount ** np.arange(len(indices))
 			discounts = discounts[::-1] # Reverses Discounts
 			newRewards = np.zeros(len(indices))
-			for i in range(len(indicies)):
-				if rewards[indicies[i]] != 0:
-					newRewards += np.pad(rewards[indicies[i]] * discount[0:i], len(newRewards))
+			for i in range(len(indices)):
+				if rewards[indices[i]] != 0:
+					additions = rewards[indices[i]] * discounts[len(discounts) - i - 1:]
+					newRewards += np.pad(additions, (0, len(newRewards) - len(additions)), 'constant', constant_values=(0, 0))
+			print(newRewards)
+			# Actually put the newRewards into the giant rewards list
 			for index, reward in zip(indices, newRewards):
 				rewards[index] = reward
 from datetime import datetime
@@ -151,7 +154,10 @@ class NewTrainer:
 					status = board.update()
 					newHeight = board.lowestBlankLine()
 					if status == 1: # If a piece was placed
-						self.env.evaluate(board, - (newHeight - prevHeight - 0.5) * 10) # Reward Function
+						if newHeight == prevHeight: # Didn't increase the weight!
+							self.env.evaluate(board, 10) # Arbitrary Weight
+						else:
+							self.env.evaluate(board, (newHeight - prevHeight - 0.5) * 10) # Reward Function
 					else:
 						self.env.evaluate(board, 0)
 					if status == -1: # Lose Condition
