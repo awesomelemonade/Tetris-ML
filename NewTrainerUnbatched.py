@@ -57,7 +57,7 @@ class TetrisModel:
 		self.model.load("weights.pkl")
 		self.learningRate = 1e-7
 		self.counter = 0
-		self.runningAverage = deque()
+		self.runningAverage = []
 		self.reset()
 	def reset(self):
 		self.derivatives = []
@@ -100,10 +100,10 @@ class TetrisModel:
 		for key in self.rewardMap.keys(): # Loops through all boards
 			tempMap[key] = len(self.rewardMap[key])
 		average = sum(tempMap.values()) / len(tempMap.values())
-		if len(self.runningAverage) == 0 or average > sum(self.runningAverage) / len(self.runningAverage):
+		if len(self.runningAverage) == 0 or average > min(self.runningAverage):
 			self.runningAverage.append(average)
 		while len(self.runningAverage) > 3:
-			self.runningAverage.popleft()
+			self.runningAverage.remove(min(self.runningAverage))
 		adjust = sum(self.runningAverage) / len(self.runningAverage)
 		print("#{}: {} - {} - {}".format(self.counter, list(tempMap.values()), average, adjust))
 		for key in tempMap.keys():
@@ -135,7 +135,7 @@ class NewTrainer:
 				for j, board in enumerate(boards):
 					if done[j]:
 						continue
-					if not board.update():
+					if board.update() == -1:
 						done[j] = True
 					if RENDER and j == 0:
 						self.screen.fill(Color.WHITE)
