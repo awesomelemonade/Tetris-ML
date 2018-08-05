@@ -151,8 +151,8 @@ class NewTrainer:
 						board.render(self.screen, *self.window_size)
 						pygame.display.flip()
 			self.env.gradientDescent()
-			if iteration % 10 == 0:
-				self.env.model.save(datetime.now().strftime("w-ckpt-%m-%d--%H-%M-%S.pkl"))
+			if (iteration % 10) == 0:
+				self.env.model.save(datetime.now().strftime("w-ckpt-i"+str(iteration)+"-%m-%d--%H-%M-%S.pkl"))
 			iteration+=1
 	def execute(self, board, action):
 		if action == 0:
