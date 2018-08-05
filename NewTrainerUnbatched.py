@@ -126,6 +126,7 @@ class TetrisModel:
 		self.model.gradientDescent(self.learningRate, self.derivatives, self.rewards)
 		self.reset()
 from datetime import datetime
+import os
 class NewTrainer:
 	def start(self):
 		self.BLOCK_SIZE = 40
@@ -135,10 +136,10 @@ class NewTrainer:
 			pygame.display.set_caption("Tetris Trainer")
 		signal.signal(signal.SIGINT, self.signalHandler)
 		self.env = TetrisModel()
+		iteration = 0
 		while True:
 			boards = [TetrisBoard(10, 20, seed=0) for x in range(20)]
 			done = np.zeros(len(boards))
-			iteration = 0
 			while not np.all(done):
 				self.env.step(boards, done, self.execute)
 				for j, board in enumerate(boards):
@@ -152,7 +153,9 @@ class NewTrainer:
 						pygame.display.flip()
 			self.env.gradientDescent()
 			if (iteration % 10) == 0:
-				self.env.model.save(datetime.now().strftime("w-ckpt-i"+str(iteration)+"-%m-%d--%H-%M-%S.pkl"))
+				if not os.path.exists("./checkpoints/"):
+					os.makedirs("./checkpoints/")
+				self.env.model.save(datetime.now().strftime("./checkpoints/w-ckpt-i"+str(iteration)+"-%m-%d--%H-%M-%S.pkl"))
 			iteration+=1
 	def execute(self, board, action):
 		if action == 0:
