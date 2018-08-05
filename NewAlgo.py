@@ -106,29 +106,18 @@ class TetrisModel:
 	def evaluate(self, tetrisBoard, reward):
 		self.rewards[self.rewardMap[tetrisBoard][-1]] = reward
 	def gradientDescent(self):
-		# Calculate Rewards TODO
-		tempMap = {}
-		for key in self.rewardMap.keys(): # Loops through all boards
-			temp = len(self.rewardMap[key])
-			tempMap[key] = len(self.rewardMap[key])
-		average = sum(tempMap.values()) / len(tempMap.values())
-		if len(self.runningAverage) == 0 or average > sum(self.runningAverage) / len(self.runningAverage):
-			self.runningAverage.append(average)
-		while len(self.runningAverage) > 3:
-			self.runningAverage.popleft()
-		adjust = sum(self.runningAverage) / len(self.runningAverage)
-		print("#{}: {} - {} - {}".format(self.counter, list(tempMap.values()), average, adjust))
-		for key in tempMap.keys():
-			tempMap[key] = (tempMap[key] - adjust)
+		# Print Info
+		gameLengths = [len(self.rewardMap[board]) for board in self.rewardMap.keys()]
+		average = sum(gameLengths) / len(gameLengths)
+		print("#{}: {} - {} - {}".format(self.counter, gameLengths, average))
 		self.counter += 1
-		for key in self.rewardMap.keys():
-			for value in self.rewardMap[key]:
-				self.rewards[value] = tempMap[key]
-		
+		# Calculate Rewards
+		self.calculateRewards(rewardMap, rewards, 0.99)
+		# Gradient Descent
 		self.model.gradientDescent(self.learningRate, self.derivatives, self.rewards)
 		self.reset()
-	def calculateRewards(boards, rewardMap, rewards, discount):
-		for board in boards:
+	def calculateRewards(rewardMap, rewards, discount):
+		for board in rewardMap.keys():
 			indices = rewardMap[board]
 			discounts = discount ** np.arange(len(indices))
 			discounts = discounts[::-1] # Reverses Discounts
@@ -136,6 +125,8 @@ class TetrisModel:
 			for i in range(len(indicies)):
 				if rewards[indicies[i]] != 0:
 					newRewards += np.pad(rewards[indicies[i]] * discount[0:i], len(newRewards))
+			for index, reward in zip(indices, newRewards):
+				rewards[index] = reward
 from datetime import datetime
 import os
 class NewTrainer:

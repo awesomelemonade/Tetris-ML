@@ -107,7 +107,6 @@ class TetrisModel:
 		# Calculate Rewards TODO
 		tempMap = {}
 		for key in self.rewardMap.keys(): # Loops through all boards
-			temp = len(self.rewardMap[key])
 			tempMap[key] = len(self.rewardMap[key])
 		average = sum(tempMap.values()) / len(tempMap.values())
 		if len(self.runningAverage) == 0 or average > sum(self.runningAverage) / len(self.runningAverage):
