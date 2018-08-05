@@ -55,7 +55,7 @@ class TetrisModel:
 	def __init__(self):
 		self.model = AbstractModel()
 		self.model.load("weights.pkl")
-		self.learningRate = 1e-6
+		self.learningRate = 1e-7
 		self.counter = 0
 		self.runningAverage = deque()
 		self.reset()
@@ -130,13 +130,15 @@ class NewTrainer:
 	def start(self):
 		self.BLOCK_SIZE = 40
 		self.window_size = (3 * 10 * self.BLOCK_SIZE, 1 * 20 * self.BLOCK_SIZE)
-		self.screen = pygame.display.set_mode(self.window_size)
-		pygame.display.set_caption("Tetris Trainer")
+		if RENDER:
+			self.screen = pygame.display.set_mode(self.window_size)
+			pygame.display.set_caption("Tetris Trainer")
 		signal.signal(signal.SIGINT, self.signalHandler)
 		self.env = TetrisModel()
 		while True:
 			boards = [TetrisBoard(10, 20, seed=0) for x in range(20)]
 			done = np.zeros(len(boards))
+			iteration = 0
 			while not np.all(done):
 				self.env.step(boards, done, self.execute)
 				for j, board in enumerate(boards):
@@ -144,12 +146,14 @@ class NewTrainer:
 						continue
 					if not board.update():
 						done[j] = True
-					if j == 0:
+					if RENDER and j == 0:
 						self.screen.fill(Color.WHITE)
 						board.render(self.screen, *self.window_size)
 						pygame.display.flip()
 			self.env.gradientDescent()
-			self.env.model.save(datetime.now().strftime("w-ckpt-%m-%d--%H-%M-%S.pkl"))
+			if iteration % 10 == 0:
+				self.env.model.save(datetime.now().strftime("w-ckpt-%m-%d--%H-%M-%S.pkl"))
+			iteration++
 	def execute(self, board, action):
 		if action == 0:
 			board.rotateFallingPiece(1)
@@ -166,10 +170,12 @@ class NewTrainer:
 		self.env.model.save("weights.pkl")
 		sys.exit(0)
 
+RENDER = True
 
-
-import pygame
-pygame.init()
+if RENDER:
+	import pygame
+	pygame.init()
 trainer = NewTrainer()
 trainer.start()
-pygame.quit()
+if RENDER:
+	pygame.quit()
