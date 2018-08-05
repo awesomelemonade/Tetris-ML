@@ -17,11 +17,13 @@ class TetrisBoard:
 		self.level = 1
 		self.linesCleared = 0
 	def createBlankGrid(self):
-		grid = np.empty((self.width, self.height), dtype=str)
+		grid = np.empty((self.width, self.height), dtype=str) # 1 char string
 		grid[:] = BLANK
 		return grid
+	# Does not include falling piece
 	def isBlankLine(self, y):
 		return np.all(self.grid[:, y] == BLANK)
+	# Does not include falling piece
 	def lowestBlankLine(self):
 		for y in range(self.height - 1, -1, -1):
 			if self.isBlankLine(y):
@@ -101,14 +103,15 @@ class TetrisBoard:
 			# falling piece has landed, set it on the board
 			self.setPiece(self.fallingPiece)
 			self.removeCompletedLines()
+			# Check if anything is on top
 			if(not self.isValidPosition(self.nextPiece)):
-				return False #loss condition
+				return -1 # Loss condition
 			self.fallingPiece = self.nextPiece
-			#check if anything is on top
 			self.nextPiece = self.getRandomNewPiece()
+			return 1 # Signal that a piece was placed
 		else:
 			self.fallingPiece.y += 1
-		return True #normal condition
+			return 0 # Normal condition
 	def renderPiece(self, screen, piece, gridWidth, gridHeight, gridShiftX=0):
 		for x in range(TetrisConstants.TEMPLATE_WIDTH):
 			for y in range(TetrisConstants.TEMPLATE_HEIGHT):
