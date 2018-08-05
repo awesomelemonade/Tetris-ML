@@ -153,7 +153,7 @@ class NewTrainer:
 			self.env.gradientDescent()
 			if iteration % 10 == 0:
 				self.env.model.save(datetime.now().strftime("w-ckpt-%m-%d--%H-%M-%S.pkl"))
-			iteration++
+			iteration+=1
 	def execute(self, board, action):
 		if action == 0:
 			board.rotateFallingPiece(1)
