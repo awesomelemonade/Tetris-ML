@@ -74,15 +74,6 @@ class TetrisModel:
 					grid[tetrisBoard.fallingPiece.x + x, tetrisBoard.fallingPiece.y + y] = -1
 		# Process Next Piece TODO
 		return grid
-	def convert(self, derivatives):
-		ret = []
-		print(derivatives[0].shape)
-		for batch in range(len(derivatives[0])):
-			temp = []
-			for i in range(len(derivatives)):
-				temp.append(derivatives[i][batch, :])
-			ret.append(temp)
-		return ret
 	def sample(self, probabilities):
 		choices = []
 		for i in range(probabilities.shape[0]):
