@@ -54,8 +54,8 @@ class AbstractModel:
 class TetrisModel:
 	def __init__(self):
 		self.model = AbstractModel()
-		self.model.load("weights.pkl")
-		self.learningRate = 1e-7
+		#self.model.load("weights.pkl")
+		self.learningRate = 1e-5
 		self.counter = 0
 		self.runningAverage = []
 		self.reset()
@@ -82,14 +82,16 @@ class TetrisModel:
 	def step(self, tetrisBoards, done, executor):
 		boards = [(i, board) for i, board in enumerate(tetrisBoards) if not done[i]]
 		for i, board in boards:
+			if not board in self.rewardMap:
+				self.rewardMap[board] = []
 			outNeurons = self.model.policyForward(self.preprocess(board)[np.newaxis, np.newaxis, :, :])
 			probabilities = softmax(outNeurons)
+			if i == 0 and (len(self.rewardMap[board]) % 10) == 0:
+				print((len(self.rewardMap[board])), probabilities)
 			choice = np.random.choice(5, p=probabilities.reshape(5))
 			loss = softmax_crossentropy(outNeurons, np.array([choice]))
 			loss.backward()
 			self.derivatives.append(self.model.getDerivatives())
-			if not board in self.rewardMap:
-				self.rewardMap[board] = []
 			self.rewardMap[board].append(len(self.rewards))
 			self.rewards.append(0)
 			loss.null_gradients()
@@ -112,7 +114,8 @@ class TetrisModel:
 		for key in self.rewardMap.keys():
 			for value in self.rewardMap[key]:
 				self.rewards[value] = tempMap[key]
-		
+		#test = [self.rewards[index] for index in self.rewardMap[list(self.rewardMap.keys())[0]]]
+		#print(test)
 		self.model.gradientDescent(self.learningRate, self.derivatives, self.rewards)
 		self.reset()
 from datetime import datetime
