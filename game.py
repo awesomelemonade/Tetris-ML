@@ -5,7 +5,7 @@ import time, random
 
 class TetrisGame:
 	def __init__(self):
-		self.BLOCK_SIZE = 40
+		self.BLOCK_SIZE = 30
 		self.close_requested = False
 		self.target_fps = 60
 		self.window_size = (3 * 10 * self.BLOCK_SIZE, 1 * 22 * self.BLOCK_SIZE)
@@ -64,6 +64,8 @@ class TetrisGame:
 						if event.key == pygame.K_SPACE:
 							board.spike()
 							spiked = True
+						if event.key == pygame.K_ESCAPE:
+							self.close_requested = True
 						#release button
 					elif event.type == pygame.KEYUP:
 						if event.key == pygame.K_UP:
@@ -96,7 +98,7 @@ class TetrisGame:
 			if lastUpdate + UPDATE_INTERVAL < time.time():
 				if not environment is None:
 					environment.step(board)
-				if not board.update():
+				if board.update() == -1: # Loss
 					if not environment is None:
 						environment.gameover()
 					break
